@@ -28,9 +28,36 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
         $ltw->wait($lim->getPeriod());
 
+        $this->assertEquals(0, $lim->getHits());
         //shoud pass again
         $this->doTheLimiterFlow($ltw);
     }
+
+    public function testReset() {
+        $lim = $this->getRequestRateLmiter();
+        $wrapper = new LimiterTimeWrapper($lim, true);
+        $rate = $lim->getRate();
+        $period = $lim->getPeriod();
+
+        $this->assertEquals(0, $lim->getHits());
+        //can use inc successfuly
+        $this->assertEquals(0, $lim->getTimeToWait());
+
+        $timeDelta = ceil($period / $rate);
+        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertEquals(1, $lim->getHits());
+        $wrapper->wait($timeDelta);
+        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertEquals(2, $lim->getHits());
+
+        $lim->reset();
+        $this->assertEquals(0, $lim->getHits());
+        //can use inc successfuly
+        $this->assertEquals(0, $lim->getTimeToWait());
+        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertEquals(1, $lim->getHits());
+    }
+
 
     public function doTheLimiterFlow(LimiterTimeWrapper $wrapper) {
         $lim = $wrapper->getLimiter();
@@ -71,7 +98,6 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $lim->getHits());
         //yes we can
         $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
-        $this->assertEquals(1, $lim->getHits());
         //we can ever more
         $this->assertEquals(0, $lim->getTimeToWait());
     }
