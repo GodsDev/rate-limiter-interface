@@ -34,18 +34,24 @@ interface RateLimiterInterface {
 
     /**
      *
-     * @return integer number of successful requests made within a period
+     * @return integer number of successful requests made within a period. That means this value can decrease over the time.
      */
     public function getHits();
 
 
     /**
-     * @return integer time to wait (in seconds) before a next successful request can be made
+     * @return integer time to wait (in seconds) before a next successful request can be made.
      */
     public function getTimeToWait();
 
     /**
-     * reset the limiter, so we can call inc() method rate-times with the true result
+     * Reset the limiter, so we can call inc() method rate-times with the true result.
+     *
+     * After a call of reset(): <ul>
+     * <li> a call of inc() should return true
+     * <li> a call of getHits() should return 0
+     * <li> a call of getTimeToWait() should return 0
+     * </ul>
      *
      * @param integer $timestamp an user-defined time of reset. Unix-like time stamp (in seconds). Mainly for testing purpose.
      */
