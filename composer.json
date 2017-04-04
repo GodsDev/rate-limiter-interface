@@ -1,5 +1,5 @@
 {
-    "name": "godsdev/request-rate-limiter-interface",
+    "name": "godsdev/rate-limiter-interface",
     "description": "limits number of its calls per time",
     "type": "library",
     "license": "MIT",
