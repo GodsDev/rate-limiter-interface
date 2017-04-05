@@ -13,29 +13,26 @@ use GodsDev\RateLimiter\RateLimiterInterface;
 abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @return RateLimiterInterface
+     * @return RateLimiterInterface instance
      */
-    abstract public function getRequestRateLmiter();
+    public function getRateLimiter() {
+        return $this->getLimiterTimeWrapper()->getLimiter();
+    }
+
+    /**
+     * @return LimiterTimeWrapper
+     */
+    abstract public function getLimiterTimeWrapper();
+
 
     public function testImplements() {
-        $this->assertInstanceOf('GodsDev\RateLimiter\RateLimiterInterface', $this->getRequestRateLmiter());
+        $this->assertInstanceOf('GodsDev\RateLimiter\RateLimiterInterface', $this->getRateLimiter());
     }
 
-    public function testFlowReal() {
-        $lim = $this->getRequestRateLmiter();
-        $ltw = new LimiterTimeWrapper($lim, true);
-        $this->doTheLimiterFlow($ltw);
 
-        $ltw->wait($lim->getPeriod());
-
-        $this->assertEquals(0, $lim->getHits());
-        //shoud pass again
-        $this->doTheLimiterFlow($ltw);
-    }
-
-    public function testReset() {
-        $lim = $this->getRequestRateLmiter();
-        $wrapper = new LimiterTimeWrapper($lim, true);
+    public function testResetLimiter() {
+        $lim = $this->getRateLimiter();
+        $timeWrapper = $this->getLimiterTimeWrapper();
         $rate = $lim->getRate();
         $period = $lim->getPeriod();
 
@@ -44,23 +41,25 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $lim->getTimeToWait());
 
         $timeDelta = ceil($period / $rate);
-        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertTrue($timeWrapper->incLimiter());
         $this->assertEquals(1, $lim->getHits());
-        $wrapper->wait($timeDelta);
-        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $timeWrapper->wait($timeDelta);
+        $this->assertTrue($timeWrapper->incLimiter());
         $this->assertEquals(2, $lim->getHits());
 
-        $lim->reset();
+        $timeWrapper->resetLimiter();
+
         $this->assertEquals(0, $lim->getHits());
         //can use inc successfuly
         $this->assertEquals(0, $lim->getTimeToWait());
-        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertTrue($timeWrapper->incLimiter());
         $this->assertEquals(1, $lim->getHits());
     }
 
 
-    public function doTheLimiterFlow(LimiterTimeWrapper $wrapper) {
-        $lim = $wrapper->getLimiter();
+    public function doTheLimiterFlow() {
+        $lim = $this->getRateLimiter();
+        $wrapper = $this->getLimiterTimeWrapper();
         $rate = $lim->getRate();
         $period = $lim->getPeriod();
 
@@ -68,59 +67,91 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
         //can use inc successfuly
         $this->assertEquals(0, $lim->getTimeToWait());
 
-        //n equally distributed requests within a period
-        $timeDelta = ceil($period / $rate);
-        for ($n = 0; $n < $rate; $n++) {
-            $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
-            $wrapper->wait($timeDelta);
-        }
+        $numberOfHits = $this->makeEquallyDistributedCalls($rate, $period);
         //number of requests
+        $this->assertEquals($rate, $numberOfHits);
         $this->assertEquals($rate, $lim->getHits());
-        //one more request within a perion should return false
-        $this->assertFalse($lim->inc( $wrapper->getTimeElapsed() ));
-        //and again, it should return false
-        $this->assertFalse($lim->inc( $wrapper->getTimeElapsed() ));
 
-        //we must wait a while for a nest successful inc
+        //one more request within a perion should return false
+        $this->assertFalse($wrapper->incLimiter());
+        //and again, it should return false
+        $this->assertFalse($wrapper->incLimiter());
+
+        //we must wait a while for a next successful inc
         $this->assertTrue($lim->getTimeToWait() > 0);
 
         //number of requests should remain the same: a maximum
         $this->assertEquals($rate, $lim->getHits());
 
-        //now we have roughly one $timeDelta time to end of the first period
-
         //sure we are over the first period, so we can inc again
-        $wrapper->wait(2 * $timeDelta);
+        $wrapper->wait($lim->getTimeToWait() + 1);
 
         //no waiting needed
         $this->assertEquals(0, $lim->getTimeToWait());
 
         $this->assertEquals(0, $lim->getHits());
         //yes we can
-        $this->assertTrue($wrapper->inc( $wrapper->getTimeElapsed() ));
+        $this->assertTrue($wrapper->incLimiter());
         //we can ever more
         $this->assertEquals(0, $lim->getTimeToWait());
     }
-}
 
-class DummyTest {
-    public function __toString()
-    {
+    /**
+     * Makes $requestCount requests within a $period
+     * does not reset the rateLimiter
+     *
+     * @param integer $requestCount number of requests
+     * @param integer $period in seconds
+     *
+     * @return number of successful rateLimiter calls (always <= $requestCount)
+     */
+    public function makeEquallyDistributedCalls($requestCount, $period) {
+        $wrapper = $this->getLimiterTimeWrapper();
+
+        $timeDelta = ceil($period / $requestCount);
+        $successCallCount = 0;
+        for ($n = 0; $n < $requestCount; $n++) {
+            if ($wrapper->incLimiter()) {
+                $successCallCount++;
+            }
+            $wrapper->wait($timeDelta);
+        }
+        return $successCallCount;
     }
 }
 
+
 /**
- * real/synthetic time
+ * real/synthetic time RateLimiter wrapper
+ *
+ * Allows an injection of synthetic time instead a real one, to speed up time-dependent tests.
  */
 class LimiterTimeWrapper {
     private $realTimeFlag; //boolean. if true, waits truly and sends no argument to limiter's inc method
     private $limiter;
     private $timeElapsed;
 
-    public function __construct(RateLimiterInterface $limiter, $useRealTimeFlag) {
+    /**
+     *
+     * @param RateLimiterInterface $limiter
+     * @param boolean $useRealTimeFlag if true, waits truly and sends no argument to limiter's inc method
+     * @param integer $startTime a synthetic start time offset, defaults to 0
+     *
+     * @return self
+     */
+    public function __construct(RateLimiterInterface $limiter, $useRealTimeFlag, $startTime = 0) {
         $this->limiter = $limiter;
         $this->realTimeFlag = $useRealTimeFlag;
-        $this->timeElapsed = 0;
+        $this->timeElapsed = $startTime;
+    }
+
+    public function resetLimiter($startTime) {
+        if ($this->realTimeFlag) {
+            $this->getLimiter()->reset($startTime);
+        } else {
+            $this->getLimiter()->reset();
+        }
+        $this->timeElapsed = $startTime;
     }
 
     public function getLimiter() {
@@ -128,14 +159,18 @@ class LimiterTimeWrapper {
     }
 
     public function getTimeElapsed() {
-        return $this->timeElapsed;
+        if ($this->realTimeFlag) {
+            return null;
+        } else {
+            return $this->timeElapsed;
+        }
     }
 
-    public function inc($timestamp) {
+    public function incLimiter() {
         if ($this->realTimeFlag) {
             $this->limiter->inc();
         } else {
-            $this->limiter->inc($timestamp);
+            $this->limiter->inc($this->getTimeElapsed());
         }
     }
 
@@ -145,6 +180,5 @@ class LimiterTimeWrapper {
         }
         $this->timeElapsed += $time;
     }
-
 
 }
