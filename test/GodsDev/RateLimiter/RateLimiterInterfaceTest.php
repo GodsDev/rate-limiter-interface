@@ -31,69 +31,67 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
 
     public function testResetLimiter() {
-        $lim = $this->getRateLimiter();
-        $timeWrapper = $this->getLimiterTimeWrapper();
-        $rate = $lim->getRate();
-        $period = $lim->getPeriod();
+        $w = $this->getLimiterTimeWrapper();
+        $rate = $w->getLimiter()->getRate();
+        $period = $w->getLimiter()->getPeriod();
 
-        $this->assertEquals(0, $lim->getHits());
+        $this->assertEquals(0, $w->getHits());
         //can use inc successfuly
-        $this->assertEquals(0, $lim->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait());
 
         $timeDelta = ceil($period / $rate);
-        $this->assertTrue($timeWrapper->incLimiter());
-        $this->assertEquals(1, $lim->getHits());
-        $timeWrapper->wait($timeDelta);
-        $this->assertTrue($timeWrapper->incLimiter());
-        $this->assertEquals(2, $lim->getHits());
+        $this->assertTrue($w->inc());
+        $this->assertEquals(1, $w->getHits());
+        $w->wait($timeDelta);
+        $this->assertTrue($w->inc());
+        $this->assertEquals(2, $w->getHits());
 
-        $timeWrapper->resetLimiter();
+        $w->reset();
 
-        $this->assertEquals(0, $lim->getHits());
+        $this->assertEquals(0, $w->getHits());
         //can use inc successfuly
-        $this->assertEquals(0, $lim->getTimeToWait());
-        $this->assertTrue($timeWrapper->incLimiter());
-        $this->assertEquals(1, $lim->getHits());
+        $this->assertEquals(0, $w->getTimeToWait());
+        $this->assertTrue($w->inc());
+        $this->assertEquals(1, $w->getHits());
     }
 
 
     public function doTheLimiterFlow() {
-        $lim = $this->getRateLimiter();
-        $wrapper = $this->getLimiterTimeWrapper();
-        $rate = $lim->getRate();
-        $period = $lim->getPeriod();
+        $w = $this->getLimiterTimeWrapper();
+        $rate = $w->getLimiter()->getRate();
+        $period = $w->getLimiter()->getPeriod();
 
-        $this->assertEquals(0, $lim->getHits());
+        $this->assertEquals(0, $w->getHits());
         //can use inc successfuly
-        $this->assertEquals(0, $lim->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait());
 
         $numberOfHits = $this->makeEquallyDistributedCalls($rate, $period);
         //number of requests
         $this->assertEquals($rate, $numberOfHits);
-        $this->assertEquals($rate, $lim->getHits());
+        $this->assertEquals($rate, $w->getHits());
 
         //one more request within a perion should return false
-        $this->assertFalse($wrapper->incLimiter());
+        $this->assertFalse($w->inc());
         //and again, it should return false
-        $this->assertFalse($wrapper->incLimiter());
+        $this->assertFalse($w->inc());
 
         //we must wait a while for a next successful inc
-        $this->assertTrue($lim->getTimeToWait() > 0);
+        $this->assertTrue($w->getTimeToWait() > 0);
 
         //number of requests should remain the same: a maximum
-        $this->assertEquals($rate, $lim->getHits());
+        $this->assertEquals($rate, $w->getHits());
 
         //sure we are over the first period, so we can inc again
-        $wrapper->wait($lim->getTimeToWait() + 1);
+        $w->wait($w->getTimeToWait() + 1);
 
         //no waiting needed
-        $this->assertEquals(0, $lim->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait());
 
-        $this->assertEquals(0, $lim->getHits());
+        $this->assertEquals(0, $w->getHits());
         //yes we can
-        $this->assertTrue($wrapper->incLimiter());
+        $this->assertTrue($w->inc());
         //we can ever more
-        $this->assertEquals(0, $lim->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait());
     }
 
     /**
@@ -106,15 +104,15 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
      * @return number of successful rateLimiter calls (always <= $requestCount)
      */
     public function makeEquallyDistributedCalls($requestCount, $period) {
-        $wrapper = $this->getLimiterTimeWrapper();
+        $w = $this->getLimiterTimeWrapper();
 
         $timeDelta = ceil($period / $requestCount);
         $successCallCount = 0;
         for ($n = 0; $n < $requestCount; $n++) {
-            if ($wrapper->incLimiter()) {
+            if ($w->inc()) {
                 $successCallCount++;
             }
-            $wrapper->wait($timeDelta);
+            $w->wait($timeDelta);
         }
         return $successCallCount;
     }
@@ -145,7 +143,7 @@ class LimiterTimeWrapper {
         $this->timeElapsed = $startTime;
     }
 
-    public function resetLimiter($startTime) {
+    public function reset($startTime) {
         if ($this->realTimeFlag) {
             $this->getLimiter()->reset($startTime);
         } else {
@@ -166,11 +164,27 @@ class LimiterTimeWrapper {
         }
     }
 
-    public function incLimiter() {
+    public function inc() {
         if ($this->realTimeFlag) {
             $this->limiter->inc();
         } else {
             $this->limiter->inc($this->getTimeElapsed());
+        }
+    }
+
+    public function getHits() {
+        if ($this->realTimeFlag) {
+            $this->limiter->getHits();
+        } else {
+            $this->limiter->getHits($this->getTimeElapsed());
+        }
+    }
+
+    public function getTimeToWait() {
+        if ($this->realTimeFlag) {
+            $this->limiter->getTimeToWait();
+        } else {
+            $this->limiter->getTimeToWait($this->getTimeElapsed());
         }
     }
 
