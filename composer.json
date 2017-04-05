@@ -1,0 +1,20 @@
+{
+    "name": "godsdev/rate-limiter-interface",
+    "description": "limits number of its calls per time",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "tomaskraus",
+            "email": "tomas.krausik@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {},
+    
+    "autoload": {
+        "psr-4": {
+            "GodsDev\\RateLimiter\\": ["src/GodsDev/RateLimiter/", "test/GodsDev/RateLimiter/"]                      
+        }
+    }
+}
