@@ -9,7 +9,7 @@
             "email": "tomas.krausik@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {},
     
     "autoload": {
