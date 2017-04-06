@@ -174,17 +174,17 @@ class LimiterTimeWrapper {
 
     public function getHits() {
         if ($this->realTimeFlag) {
-            $this->limiter->getHits();
+            return $this->limiter->getHits();
         } else {
-            $this->limiter->getHits($this->getTimeElapsed());
+            return $this->limiter->getHits($this->getTimeElapsed());
         }
     }
 
     public function getTimeToWait() {
         if ($this->realTimeFlag) {
-            $this->limiter->getTimeToWait();
+            return $this->limiter->getTimeToWait();
         } else {
-            $this->limiter->getTimeToWait($this->getTimeElapsed());
+            return $this->limiter->getTimeToWait($this->getTimeElapsed());
         }
     }
 
