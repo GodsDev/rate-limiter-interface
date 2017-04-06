@@ -106,7 +106,7 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
     public function makeEquallyDistributedCalls($requestCount, $period) {
         $w = $this->getLimiterTimeWrapper();
 
-        $timeDelta = ceil($period / $requestCount);
+        $timeDelta = floor($period / $requestCount);
         $successCallCount = 0;
         for ($n = 0; $n < $requestCount; $n++) {
             if ($w->inc()) {
