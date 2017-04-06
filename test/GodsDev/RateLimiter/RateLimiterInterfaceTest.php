@@ -143,11 +143,11 @@ class LimiterTimeWrapper {
         $this->timeElapsed = $startTime;
     }
 
-    public function reset($startTime) {
+    public function reset($startTime = 0) {
         if ($this->realTimeFlag) {
-            $this->getLimiter()->reset($startTime);
-        } else {
             $this->getLimiter()->reset();
+        } else {
+            $this->getLimiter()->reset($startTime);
         }
         $this->timeElapsed = $startTime;
     }
