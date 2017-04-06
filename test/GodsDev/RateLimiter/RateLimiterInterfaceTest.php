@@ -166,9 +166,9 @@ class LimiterTimeWrapper {
 
     public function inc() {
         if ($this->realTimeFlag) {
-            $this->limiter->inc();
+            return $this->limiter->inc();
         } else {
-            $this->limiter->inc($this->getTimeElapsed());
+            return $this->limiter->inc($this->getTimeElapsed());
         }
     }
 
