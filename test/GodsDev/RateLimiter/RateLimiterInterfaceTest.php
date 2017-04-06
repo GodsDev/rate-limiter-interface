@@ -35,12 +35,12 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
         $rate = $w->getLimiter()->getRate();
         $period = $w->getLimiter()->getPeriod();
 
-        $this->assertEquals(0, $w->getHits());
+        $this->assertEquals(0, $w->getHits(), 'zero hits on start');
         //can use inc successfuly
-        $this->assertEquals(0, $w->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait(), 'need no wait on start');
 
         $timeDelta = ceil($period / $rate);
-        $this->assertTrue($w->inc());
+        $this->assertTrue($w->inc(), 'can inc at the first time');
         $this->assertEquals(1, $w->getHits());
         $w->wait($timeDelta);
         $this->assertTrue($w->inc());
@@ -48,10 +48,10 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
         $w->reset();
 
-        $this->assertEquals(0, $w->getHits());
+        $this->assertEquals(0, $w->getHits(), 'zero hits after a reset');
         //can use inc successfuly
-        $this->assertEquals(0, $w->getTimeToWait());
-        $this->assertTrue($w->inc());
+        $this->assertEquals(0, $w->getTimeToWait(), 'no need to wait after a reset');
+        $this->assertTrue($w->inc(), 'can inc after a reset');
         $this->assertEquals(1, $w->getHits());
     }
 
@@ -67,31 +67,31 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
         $numberOfHits = $this->makeEquallyDistributedCalls($rate, $period);
         //number of requests
-        $this->assertEquals($rate, $numberOfHits);
+        $this->assertEquals($rate, $numberOfHits, 'full count after equallyDistributed calls');
         $this->assertEquals($rate, $w->getHits());
 
         //one more request within a perion should return false
-        $this->assertFalse($w->inc());
+        $this->assertFalse($w->inc(), 'no over-increment within the period');
         //and again, it should return false
-        $this->assertFalse($w->inc());
+        $this->assertFalse($w->inc(), 'no over-increment within the period 2');
 
         //we must wait a while for a next successful inc
-        $this->assertTrue($w->getTimeToWait() > 0);
+        $this->assertTrue($w->getTimeToWait() > 0, "must wait within a fully-consumed period");
 
         //number of requests should remain the same: a maximum
-        $this->assertEquals($rate, $w->getHits());
+        $this->assertEquals($rate, $w->getHits(), "number of requests should remain the same: a maximum");
 
         //sure we are over the first period, so we can inc again
         $w->wait($w->getTimeToWait() + 1);
 
         //no waiting needed
-        $this->assertEquals(0, $w->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait(), "no need to wait when a period is over");
 
-        $this->assertEquals(0, $w->getHits());
+        $this->assertEquals(0, $w->getHits(), "zero hits when a period is over");
         //yes we can
-        $this->assertTrue($w->inc());
+        $this->assertTrue($w->inc(), "can increment again when a period is over");
         //we can ever more
-        $this->assertEquals(0, $w->getTimeToWait());
+        $this->assertEquals(0, $w->getTimeToWait(), "no need to wait in a new, unconsumed period");
     }
 
     /**
