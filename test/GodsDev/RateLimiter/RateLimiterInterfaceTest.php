@@ -294,19 +294,6 @@ class LimiterTimeWrapper {
         $this->reset($startTime);
     }
 
-    public function reset($startTime = 0) {
-        if ($this->realTimeFlag) {
-            $this->getLimiter()->reset();
-        } else {
-            $this->getLimiter()->reset($startTime);
-        }
-        $this->time = $startTime;
-    }
-
-    public function getLimiter() {
-        return $this->limiter;
-    }
-
     public function getTime() {
         if ($this->realTimeFlag) {
             return time();
@@ -315,28 +302,30 @@ class LimiterTimeWrapper {
         }
     }
 
-    public function inc() {
-        if ($this->realTimeFlag) {
-            return $this->limiter->inc();
+    public function reset($startTime = null) {
+        if ($startTime) {
+            $resetTime = $startTime;
         } else {
-            return $this->limiter->inc($this->getTime());
+            $resetTime = $this->getTime();
         }
+        $this->time = $resetTime;
+        $this->getLimiter()->reset($resetTime);
+    }
+
+    public function getLimiter() {
+        return $this->limiter;
+    }
+
+    public function inc() {
+        return $this->limiter->inc($this->getTime());
     }
 
     public function getHits() {
-        if ($this->realTimeFlag) {
-            return $this->limiter->getHits();
-        } else {
-            return $this->limiter->getHits($this->getTime());
-        }
+        return $this->limiter->getHits($this->getTime());
     }
 
     public function getTimeToWait() {
-        if ($this->realTimeFlag) {
-            return $this->limiter->getTimeToWait();
-        } else {
-            return $this->limiter->getTimeToWait($this->getTime());
-        }
+        return $this->limiter->getTimeToWait($this->getTime());
     }
 
     /**
