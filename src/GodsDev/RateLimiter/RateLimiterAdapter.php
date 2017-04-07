@@ -32,7 +32,6 @@ abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInt
     public function __construct($rate, $period) {
         $this->rate = $rate;
         $this->period = $period;
-        $this->reset();
     }
 
     //--------------------------------------------------------------------------
@@ -108,9 +107,7 @@ abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInt
         }
         $fetchSuccess = $this->fetchDataImpl($this->hits, $this->startTime);
         if ($fetchSuccess == false) {
-            $this->hits = 0;
-            $this->startTime = $timestamp;
-            $this->timeToWait = 0;
+            $this->resetInner($timestamp);
             $this->createDataImpl($this->hits, $this->startTime);
         }
 
@@ -144,11 +141,17 @@ abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInt
     }
 
     public function reset($timestamp = null) {
+        $this->resetInner($timestamp);
+        $this->resetDataImpl(0, $timestamp);
+    }
+
+    private function resetInner($timestamp) {
         if (is_null($timestamp)) {
             $timestamp = time();
         }
-        $this->resetDataImpl(0, $timestamp);
+        $this->startTime = $timestamp;
         $this->timeToWait = 0;
+        $this->hits = 0;
     }
 
 }
