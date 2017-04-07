@@ -5,9 +5,16 @@ namespace GodsDev\RateLimiter;
 
 /**
  * Limits the number of requests per time.
- * There are two parameters: period and rate.
+ * There are two parameters: rate and period.
  * A request is a call of the inc() method. An inc() method begins to return false if number of requests per period is higher than a rate
  *
+ * rate
+ * period
+ *   active consumed
+ *   exhausted
+ * hits
+ * startTime
+ * reset
  *
  */
 interface RateLimiterInterface {
