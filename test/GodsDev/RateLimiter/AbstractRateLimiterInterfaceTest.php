@@ -12,26 +12,18 @@ namespace GodsDev\RateLimiter;
  * override the setUp() method, call a parent->setUp() in it.
  *
  */
-abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 {
-    private $limiterWrapper;
+    private $syntheticTimeWrapper;
 
     /**
      * @return \GodsDev\RateLimiter\RateLimiterInterface new RateLimiterInterface instance
      */
-    abstract public function createRateLimiter();
-
-    /**
-     * @param \GodsDev\RateLimiter\RateLimiterInterface RateLimiter instance
-     *
-     * @return \GodsDev\RateLimiter\RateLimiterTimeWrapper new LimiterTimeWrapper instance
-     */
-    abstract public function createRateLimiterTimeWrapper(\GodsDev\RateLimiter\RateLimiterInterface $rateLimiter);
-
+    abstract public function createRateLimiter($rate, $period);
 
     protected function setUp() {
-        $limiter = $this->createRateLimiter();
-        $this->limiterWrapper = $this->createRateLimiterTimeWrapper($limiter);
+        $limiter = $this->createRateLimiter(4, 10);
+        $this->syntheticTimeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, false, 1000);
     }
 
     /**
@@ -39,7 +31,7 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
      * @return \GodsDev\RateLimiter\RateLimiterTimeWrapper
      */
     protected function getLimiterWrapper() {
-        return $this->limiterWrapper;
+        return $this->syntheticTimeWrapper;
     }
 
 
@@ -54,7 +46,7 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
      *   <li>Assures a requestCount requests are made
      * </ul>
      * @param integer $requestCount number of requests
-     * @param integer $period in seconds
+     * @param integer $period in time-units
      * @param \GodsDev\RateLimiter\RateLimiterTimeWrapper $w LimiterTimeWrapper instance
      *
      * @return number of successful rateLimiter calls (always <= $requestCount)
@@ -87,11 +79,11 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
     //-TESTS-------------------------------------------------------------------------
 
-    public function testMinimalRateAndPeriodValues() {
+    public function test_At_Least_1_Hit_Per_1_TimeUnit() {
         $w = $this->getLimiterWrapper();
 
-        $this->assertGreaterThanOrEqual(2, $w->getLimiter()->getRate(), 'less than a minimal rate value is provided');
-        $this->assertGreaterThanOrEqual(4, $w->getLimiter()->getPeriod(), 'less than a minimal period value is provided');
+        $this->assertGreaterThanOrEqual(1, $w->getLimiter()->getRate(), 'less than a minimal rate value is provided');
+        $this->assertGreaterThanOrEqual(1, $w->getLimiter()->getPeriod(), 'less than a minimal period value is provided');
     }
 
 
@@ -172,7 +164,7 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
         $this->assertLessThanOrEqual($period - 1, $w->getTimeToWait(), 'has to wait for less than whole period within an exhausted period');
     }
 
-    public function test_Too_Many_Requests_In_One_Period_Do_NotAffectNumber_Of_Hits() {
+    public function test_Too_Many_Requests_In_One_Period_Do_Not_Affect_Number_Of_Hits() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
         $period = $w->getLimiter()->getPeriod();
@@ -215,7 +207,7 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 
         $this->ensureMaximumHitsIsMade();
 
-        $timeBefore = $w->getTime() - $period - 1;
+        $timeBefore = $w->getStartTime() - 1;
         $this->assertEquals(0, $w->getLimiter()->getHits($timeBefore), "if timestamp before start time, reset the limiter to have 0 hits");
         $this->assertEquals(0, $w->getLimiter()->getTimeToWait($timeBefore), "if timestamp before start time, reset the limiter to have 0 timeToWait");
     }
@@ -263,4 +255,10 @@ abstract class RateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
     }
 
 
+    public function test_real_time() {
+        $limiter = $this->createRateLimiter(4, 10);
+        $this->syntheticTimeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, true, 0);
+
+        $this->test_TimeToWait_Half_A_Period();
+    }
 }
