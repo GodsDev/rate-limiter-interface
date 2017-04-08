@@ -10,10 +10,13 @@ namespace GodsDev\RateLimiter;
  *
  * rate
  * period
- *   active consumed
+ *   active
+ *   consumed
+ *   fresh
  *   exhausted
- * hits
+ * hit
  * startTime
+ * timeToWait
  * reset
  *
  */
