@@ -13,7 +13,7 @@ namespace GodsDev\RateLimiter;
  *
  * @author Tomáš
  */
-abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInterface {
+abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterInterface {
 
     protected $rate;
     protected $period;
