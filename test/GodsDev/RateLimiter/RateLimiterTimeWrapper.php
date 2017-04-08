@@ -16,17 +16,17 @@ class RateLimiterTimeWrapper {
      *
      * @param RateLimiterInterface $limiter
      * @param boolean $useRealTimeFlag if true, waits truly and sends no argument to limiter's inc method
-     * @param integer $startTime a synthetic start time offset, defaults to 0 (only valid if $useRealTimeFlag is set to false)
+     * @param integer $startTime a synthetic start time offset, (only valid if $useRealTimeFlag is set to false)
      *
      * @return self
      */
-    public function __construct(RateLimiterInterface $limiter, $useRealTimeFlag, $startTime = 3600*24) {
+    public function __construct(RateLimiterInterface $limiter, $useRealTimeFlag, $startTime) {
         $this->limiter = $limiter;
         $this->realTimeFlag = $useRealTimeFlag;
-        if ($this->realTimeFlag) {
-            $startTime = time();
+        if (!$this->realTimeFlag) {
+            $this->time = $startTime;
         }
-        $this->reset($startTime);
+        $this->reset($this->getTime());
     }
 
     public function getTime() {
