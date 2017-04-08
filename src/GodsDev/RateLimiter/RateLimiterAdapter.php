@@ -102,9 +102,7 @@ abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInt
     }
 
     protected function refreshState($timestamp) {
-        if (is_null($timestamp)) {
-            $timestamp = time();
-        }
+        $timestamp = $this->computeTimestamp($timestamp);
         $fetchSuccess = $this->fetchDataImpl($this->hits, $this->startTime);
         if ($fetchSuccess == false) {
             $this->resetInner($timestamp);
@@ -146,12 +144,16 @@ abstract class RateLimiterAdapter implements \GodsDev\RateLimiter\RateLimiterInt
     }
 
     private function resetInner($timestamp) {
-        if (is_null($timestamp)) {
-            $timestamp = time();
-        }
-        $this->startTime = $timestamp;
+        $this->startTime = $this->computeTimestamp($timestamp);
         $this->timeToWait = 0;
         $this->hits = 0;
     }
 
+
+    private function computeTimestamp($timestamp) {
+        if (is_null($timestamp)) {
+            $timestamp = time();
+        }
+        return $timestamp;
+    }
 }
