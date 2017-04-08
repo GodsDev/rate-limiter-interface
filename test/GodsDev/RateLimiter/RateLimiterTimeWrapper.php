@@ -8,9 +8,10 @@ namespace GodsDev\RateLimiter;
  * Allows an injection of synthetic time instead a real one, to speed up time-dependent tests.
  */
 class RateLimiterTimeWrapper {
-    private $realTimeFlag; //boolean. if true, waits truly and sends no timestamp argument to limiter's inc method
+    private $realTimeFlag; //boolean. if true, waits truly
     private $limiter;
     private $time;
+    private $startTime;
 
     /**
      *
@@ -25,8 +26,8 @@ class RateLimiterTimeWrapper {
         $this->realTimeFlag = $useRealTimeFlag;
         if (!$this->realTimeFlag) {
             $this->time = $startTime;
+            $this->startTime = $startTime;
         }
-        $this->reset($this->getTime());
     }
 
     public function getTime() {
@@ -37,6 +38,10 @@ class RateLimiterTimeWrapper {
         }
     }
 
+    public function getStartTime() {
+        return $this->startTime;
+    }
+
     public function reset($startTime = null) {
         if ($startTime) {
             $resetTime = $startTime;
@@ -44,6 +49,7 @@ class RateLimiterTimeWrapper {
             $resetTime = $this->getTime();
         }
         $this->time = $resetTime;
+        $this->startTime = $resetTime;
         $this->getLimiter()->reset($resetTime);
     }
 
