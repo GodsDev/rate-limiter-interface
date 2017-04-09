@@ -50,7 +50,7 @@ class RateLimiterTimeWrapper {
         }
         $this->time = $resetTime;
         $this->startTime = $resetTime;
-        $this->getLimiter()->reset($resetTime);
+        $this->limiter->reset($resetTime);
     }
 
     public function getLimiter() {
