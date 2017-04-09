@@ -48,33 +48,32 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * @see createDataImpl
      */
-    abstract protected function fetchDataImpl(&$hits, &$startTime);
+    abstract protected function readDataImpl(&$hits, &$startTime);
 
 
     /*
      * This method is called when a limiter's data is not found
      *
-     * @param integer $hits
      * @param integer $startTime
      *
-     * @see fetchDataImpl
+     * @see readDataImpl
      * @see resetDataImpl
      */
-    abstract protected function createDataImpl($hits, $startTime);
+    abstract protected function createDataImpl($startTime);
 
     /**
-     * stores the number of hits
+     * does the incremetation of hits
      *
      * @param integer $hits number of hits
      */
-    abstract protected function storeHitsImpl($hits);
+    abstract protected function incrementHitImpl();
 
     /**
      * resets the limiter. Should set hits to 0.
      *
      * @param integer startTime
      */
-    abstract protected function resetDataImpl($hits, $startTime);
+    abstract protected function resetDataImpl($startTime);
 
     public function getHits($timestamp = null) {
         $this->refreshState($timestamp);
@@ -100,8 +99,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     public function inc($timestamp = null) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
-            $this->hits++;
-            $this->storeHitsImpl($this->hits);
+            $this->incrementHitImpl();
             return true;
         } else {
             return false;
@@ -110,7 +108,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
     public function reset($timestamp = null) {
         $this->resetInner($timestamp);
-        $this->resetDataImpl(0, $timestamp);
+        $this->resetDataImpl($timestamp);
     }
 
 
@@ -125,22 +123,24 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
     private function refreshState($timestamp) {
         $timestamp = $this->computeTimestamp($timestamp);
-        $fetchSuccess = $this->fetchDataImpl($this->hits, $this->startTime);
+        $fetchSuccess = $this->readDataImpl($this->hits, $this->startTime);
         if ($fetchSuccess == false) {
             $this->resetInner($timestamp);
-            $this->createDataImpl($this->hits, $this->startTime);
+            $this->createDataImpl($this->startTime);
         }
 
         if ($this->timeElapsed($timestamp) >= $this->period) {
             //a new, clean period
             $this->reset($timestamp);
-        } else if ($this->timeElapsed($timestamp) < 0) {
-            //a new, clean period if actual $timestamp is before the starttime
+        } else if ($timestamp < $this->startTime) {
+            //a new, clean period if an actual $timestamp is before the starttime
             $this->reset($timestamp);
         } else if ($this->hits < $this->rate) {
+            //within the period, and there are free hits
             $this->timeToWait = 0;
         } else {
-            $this->timeToWait = intval( ceil($this->period - ($timestamp - $this->startTime)) );
+            //within the period, and there are no free hits to use
+            $this->timeToWait = intval( ceil($this->period - $this->timeElapsed($timestamp)) );
         }
     }
 
@@ -158,5 +158,5 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         }
         return $timestamp;
     }
-    
+
 }
