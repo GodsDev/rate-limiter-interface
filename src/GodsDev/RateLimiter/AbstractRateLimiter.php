@@ -15,13 +15,13 @@ namespace GodsDev\RateLimiter;
  */
 abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterInterface {
 
-    protected $rate;
-    protected $period;
+    private $rate;
+    private $period;
 
-    protected $timeToWait;
+    private $timeToWait;
 
-    protected $hits;
-    protected $startTime;
+    private $hits;
+    private $startTime;
 
     /**
      * new instance
@@ -92,36 +92,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         return $this->rate;
     }
 
-    /**
-     *
-     * @param integer $timestamp
-     * @return integer time elapsed since startTime
-     */
-    private function timeElapsed($timestamp) {
-        return $timestamp - $this->startTime;
-    }
-
-    protected function refreshState($timestamp) {
-        $timestamp = $this->computeTimestamp($timestamp);
-        $fetchSuccess = $this->fetchDataImpl($this->hits, $this->startTime);
-        if ($fetchSuccess == false) {
-            $this->resetInner($timestamp);
-            $this->createDataImpl($this->hits, $this->startTime);
-        }
-
-        if ($this->timeElapsed($timestamp) >= $this->period) {
-            //a new, clean period
-            $this->reset($timestamp);
-        } else if ($this->timeElapsed($timestamp) < 0) {
-            //a new, clean period if actual $timestamp is before the starttime
-            $this->reset($timestamp);
-        } else if ($this->hits < $this->rate) {
-            $this->timeToWait = 0;
-        } else {
-            $this->timeToWait = intval( ceil($this->period - ($timestamp - $this->startTime)) );
-        }
-    }
-
     public function getTimeToWait($timestamp = null) {
         $this->refreshState($timestamp);
         return $this->timeToWait;
@@ -143,6 +113,38 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         $this->resetDataImpl(0, $timestamp);
     }
 
+
+    /**
+     *
+     * @param integer $timestamp
+     * @return integer time elapsed since startTime
+     */
+    private function timeElapsed($timestamp) {
+        return $timestamp - $this->startTime;
+    }
+
+    private function refreshState($timestamp) {
+        $timestamp = $this->computeTimestamp($timestamp);
+        $fetchSuccess = $this->fetchDataImpl($this->hits, $this->startTime);
+        if ($fetchSuccess == false) {
+            $this->resetInner($timestamp);
+            $this->createDataImpl($this->hits, $this->startTime);
+        }
+
+        if ($this->timeElapsed($timestamp) >= $this->period) {
+            //a new, clean period
+            $this->reset($timestamp);
+        } else if ($this->timeElapsed($timestamp) < 0) {
+            //a new, clean period if actual $timestamp is before the starttime
+            $this->reset($timestamp);
+        } else if ($this->hits < $this->rate) {
+            $this->timeToWait = 0;
+        } else {
+            $this->timeToWait = intval( ceil($this->period - ($timestamp - $this->startTime)) );
+        }
+    }
+
+
     private function resetInner($timestamp) {
         $this->startTime = $this->computeTimestamp($timestamp);
         $this->timeToWait = 0;
@@ -156,4 +158,5 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         }
         return $timestamp;
     }
+    
 }
