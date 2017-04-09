@@ -75,7 +75,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      */
     abstract protected function resetDataImpl($startTime);
 
-    public function getHits($timestamp = null) {
+    public function getHits($timestamp) {
         $this->refreshState($timestamp);
         return $this->hits;
     }
@@ -91,12 +91,12 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         return $this->rate;
     }
 
-    public function getTimeToWait($timestamp = null) {
+    public function getTimeToWait($timestamp) {
         $this->refreshState($timestamp);
         return $this->timeToWait;
     }
 
-    public function inc($timestamp = null) {
+    public function inc($timestamp) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
             $this->incrementHitImpl();
@@ -106,7 +106,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         }
     }
 
-    public function reset($timestamp = null) {
+    public function reset($timestamp) {
         $this->resetInner($timestamp);
         $this->resetDataImpl($timestamp);
     }
@@ -122,7 +122,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     }
 
     private function refreshState($timestamp) {
-        $timestamp = $this->computeTimestamp($timestamp);
         $fetchSuccess = $this->readDataImpl($this->hits, $this->startTime);
         if ($fetchSuccess == false) {
             $this->resetInner($timestamp);
@@ -146,17 +145,10 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
 
     private function resetInner($timestamp) {
-        $this->startTime = $this->computeTimestamp($timestamp);
+        $this->startTime = $timestamp;
         $this->timeToWait = 0;
         $this->hits = 0;
     }
 
-
-    private function computeTimestamp($timestamp) {
-        if (is_null($timestamp)) {
-            $timestamp = time();
-        }
-        return $timestamp;
-    }
 
 }
