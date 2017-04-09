@@ -115,6 +115,19 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertTrue($newHits == $currentHits + 1, 'call of inc() increments hits by one');
     }
 
+    public function test_StartTime_Plus_Period_Means_New_Fresh_Period() {
+        $w = $this->getLimiterWrapper();
+        $period = $w->getLimiter()->getPeriod();
+
+        $w->inc();
+        $w->inc();
+        $this->assertEquals(2, $w->getHits(), "a hit is made");
+        $w->wait($period - 1);
+        $this->assertEquals(2, $w->getHits(), "a hit count remain the same before end of a period");
+        $w->wait(1);
+        $this->test_Zero_Hits_Zero_TimeToWait();
+    }
+
     public function test_Can_Increment_Before_And_After_Reset_In_Period() {
         $w = $this->getLimiterWrapper();
 
