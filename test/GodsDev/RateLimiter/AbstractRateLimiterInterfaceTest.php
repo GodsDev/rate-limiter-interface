@@ -14,7 +14,7 @@ namespace GodsDev\RateLimiter;
  */
 abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
 {
-    private $syntheticTimeWrapper;
+    private $timeWrapper;
 
     /**
      * @return \GodsDev\RateLimiter\RateLimiterInterface new RateLimiterInterface instance
@@ -22,8 +22,8 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     abstract public function createRateLimiter($rate, $period);
 
     protected function setUp() {
-        $limiter = $this->createRateLimiter(4, 10);
-        $this->syntheticTimeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, false, 1000);
+        $limiter = $this->createRateLimiter(500, 100);
+        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, false, 1000);
     }
 
     /**
@@ -31,7 +31,7 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
      * @return \GodsDev\RateLimiter\RateLimiterTimeWrapper
      */
     protected function getLimiterWrapper() {
-        return $this->syntheticTimeWrapper;
+        return $this->timeWrapper;
     }
 
 
@@ -256,9 +256,11 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
 
 
     public function test_real_time() {
-        $limiter = $this->createRateLimiter(4, 10);
-        $this->syntheticTimeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, true, 0);
+        $limiter = $this->createRateLimiter(10, 4);
+        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, true, 0);
 
         $this->test_TimeToWait_Half_A_Period();
+        $this->timeWrapper->reset();
+        $this->test_No_Hits_No_TimeToWait_If_Timestamp_Before_StartTime();
     }
 }
