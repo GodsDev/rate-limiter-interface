@@ -18,10 +18,10 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     private $rate;
     private $period;
 
-    private $timeToWait;
+    private $window;
 
+    private $timeToWait;
     private $hits;
-    private $startTime;
 
     /**
      * new instance
@@ -77,11 +77,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      */
     abstract protected function resetDataImpl($startTime);
 
-    public function getHits($timestamp) {
-        $this->refreshState($timestamp);
-        return $this->hits;
-    }
-
     //--------------------------------------------------------------------------
 
 
@@ -93,9 +88,19 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         return $this->rate;
     }
 
+    public function getHits($timestamp) {
+        $this->refreshState($timestamp);
+        return $this->hits;
+    }
+
     public function getTimeToWait($timestamp) {
         $this->refreshState($timestamp);
         return $this->timeToWait;
+    }
+
+    public function getStartTime($timestamp) {
+        $this->refreshState($timestamp);
+        return $this->getWindow()->getStartTime();
     }
 
     public function inc($timestamp) {
@@ -115,22 +120,12 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
     /**
      *
-     * @param integer $timestamp
-     * @return integer time elapsed since startTime
+     * @return \GodsDev\RateLimiter\TimeWindow instance
      */
-    protected function timeElapsed($timestamp) {
-        return $timestamp - $this->startTime;
+    protected function getWindow() {
+        return $this->window;
     }
 
-    /**
-     *
-     * @param integer $timestamp
-     * @return boolean
-     */
-    protected function isPeriodActive($timestamp) {
-        $te = $this->timeElapsed($timestamp);
-        return ($te >= 0 && $te < $this->period);
-    }
 
     private function refreshState($timestamp) {
         $fetchSuccess = $this->readDataImpl($this->hits, $this->startTime);
@@ -139,7 +134,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
             $this->createDataImpl($this->startTime);
         }
 
-        if ($this->isPeriodActive($timestamp) == false) {
+        if ($this->getWindow()->isActive($timestamp) == false) {
             //a new, clean period
             $this->reset($timestamp);
         } else if ($this->hits < $this->rate) {
@@ -147,13 +142,13 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
             $this->timeToWait = 0;
         } else {
             //within the period, and there are no free hits to use
-            $this->timeToWait = intval( ceil($this->period - $this->timeElapsed($timestamp)) );
+            $this->timeToWait = $this->getWindow()->getTimeToNext($timestamp);
         }
     }
 
 
     private function resetInner($timestamp) {
-        $this->startTime = $timestamp;
+        $this->window = new TimeWindow($timestamp, $this->period);
         $this->timeToWait = 0;
         $this->hits = 0;
     }

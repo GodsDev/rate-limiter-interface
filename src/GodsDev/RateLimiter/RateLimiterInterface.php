@@ -10,8 +10,11 @@ namespace GodsDev\RateLimiter;
  *
  * rate
  * period
+ * window
+ *   elapsed
  *   active
- *   consumed
+ *   future
+ *
  *   fresh
  *   exhausted
  * hit
@@ -71,5 +74,10 @@ interface RateLimiterInterface {
      */
     public function reset($timestamp);
 
+    /**
+     *
+     * @param type $timestamp  an user-defined time of a method call. Unix-like time stamp (in time-units).
+     */
+    public function getStartTime($timestamp);
 }
 

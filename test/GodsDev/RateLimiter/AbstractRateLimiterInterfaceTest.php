@@ -224,6 +224,16 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals(0, $w->getLimiter()->getHits($timeBefore), "if timestamp before start time, reset the limiter to have 0 hits");
         $this->assertEquals(0, $w->getLimiter()->getTimeToWait($timeBefore), "if timestamp before start time, reset the limiter to have 0 timeToWait");
     }
+
+
+    public function test_StartTime_Is_Within_TimeWindow_Active_State() {
+        $w = $this->getLimiterWrapper();
+        $period = $w->getLimiter()->getPeriod();
+
+        $this->assertLessThanOrEqual($w->getTime(), $w->getLimiter()->getStartTime($w->getTime()));
+        $this->assertGreaterThan($w->getTime() - $period, $w->getLimiter()->getStartTime($w->getTime()));
+    }
+
 //------------------------------------------------------------------------------
 
 
