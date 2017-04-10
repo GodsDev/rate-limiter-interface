@@ -67,7 +67,7 @@ interface RateLimiterInterface {
      * <li> a call of getTimeToWait() should return 0
      * </ul>
      *
-     * @param integer an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
      */
     public function reset($timestamp);
 
