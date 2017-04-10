@@ -3,12 +3,11 @@
 namespace GodsDev\RateLimiter;
 
 /**
- * real/synthetic time RateLimiter wrapper
+ * synthetic time RateLimiter wrapper
  *
- * Allows an injection of synthetic time instead a real one, to speed up time-dependent tests.
+ * Allows an injection of synthetic time instead a real one, to cover edge cases and speed up time-dependent tests.
  */
 class RateLimiterTimeWrapper {
-    private $realTimeFlag; //boolean. if true, waits truly
     private $limiter;
     private $time;
     private $startTime;
@@ -16,26 +15,18 @@ class RateLimiterTimeWrapper {
     /**
      *
      * @param RateLimiterInterface $limiter
-     * @param boolean $useRealTimeFlag if true, waits truly and sends no argument to limiter's inc method
-     * @param integer $startTime a synthetic start time offset, (only valid if $useRealTimeFlag is set to false)
+     * @param integer $startTime a synthetic start time offset
      *
      * @return self
      */
-    public function __construct(RateLimiterInterface $limiter, $useRealTimeFlag, $startTime) {
+    public function __construct(RateLimiterInterface $limiter, $startTime) {
         $this->limiter = $limiter;
-        $this->realTimeFlag = $useRealTimeFlag;
-        if (!$this->realTimeFlag) {
-            $this->time = $startTime;
-            $this->startTime = $startTime;
-        }
+        $this->time = $startTime;
+        $this->startTime = $startTime;
     }
 
     public function getTime() {
-        if ($this->realTimeFlag) {
-            return time();
-        } else {
             return $this->time;
-        }
     }
 
     public function getStartTime() {
@@ -75,9 +66,6 @@ class RateLimiterTimeWrapper {
      */
     public function wait($duration, $methodName = "") {
         //echo("\n---wait for [$duration] seconds in [$methodName] ...");
-        if ($this->realTimeFlag) {
-            sleep($duration);
-        }
         $this->time += $duration;
     }
 

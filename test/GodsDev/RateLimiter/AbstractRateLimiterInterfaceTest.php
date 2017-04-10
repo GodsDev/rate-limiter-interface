@@ -23,7 +23,7 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
 
     protected function setUp() {
         $limiter = $this->createRateLimiter(500, 100);
-        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, false, 1000);
+        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, 1000);
     }
 
     /**
@@ -267,13 +267,4 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals(0, $w->getTimeToWait(), "no need to wait in a new, unconsumed period");
     }
 
-
-    public function test_real_time() {
-        $limiter = $this->createRateLimiter(10, 4);
-        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, true, 0);
-
-        $this->test_TimeToWait_Half_A_Period();
-        $this->timeWrapper->reset();
-        $this->test_No_Hits_No_TimeToWait_If_Timestamp_Before_StartTime();
-    }
 }
