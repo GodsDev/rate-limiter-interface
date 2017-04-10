@@ -65,6 +65,8 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      * does the incremetation of hits
      *
      * @param integer $hits number of hits
+     *
+     * @return boolean true if the incrementation was successful, false otherwise
      */
     abstract protected function incrementHitImpl();
 
@@ -99,8 +101,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     public function inc($timestamp) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
-            $this->incrementHitImpl();
-            return true;
+            return $this->incrementHitImpl();
         } else {
             return false;
         }
@@ -117,8 +118,18 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      * @param integer $timestamp
      * @return integer time elapsed since startTime
      */
-    private function timeElapsed($timestamp) {
+    protected function timeElapsed($timestamp) {
         return $timestamp - $this->startTime;
+    }
+
+    /**
+     *
+     * @param integer $timestamp
+     * @return boolean
+     */
+    protected function isPeriodActive($timestamp) {
+        $te = $this->timeElapsed($timestamp);
+        return ($te >= 0 && $te < $this->period);
     }
 
     private function refreshState($timestamp) {
@@ -128,11 +139,8 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
             $this->createDataImpl($this->startTime);
         }
 
-        if ($this->timeElapsed($timestamp) >= $this->period) {
+        if ($this->isPeriodActive($timestamp) == false) {
             //a new, clean period
-            $this->reset($timestamp);
-        } else if ($timestamp < $this->startTime) {
-            //a new, clean period if an actual $timestamp is before the starttime
             $this->reset($timestamp);
         } else if ($this->hits < $this->rate) {
             //within the period, and there are free hits
