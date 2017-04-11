@@ -63,16 +63,7 @@ class TimeWindowTest extends \PHPUnit_Framework_TestCase {
         $this->assertFalse($this->w->isFuture(1000 + 50 + 1));
     }
 
-    public function test_Get_Time_Elapsed() {
-        $this->assertEquals(-100, $this->w->getTimeElapsed(1000 - 100));
-        $this->assertEquals(-1, $this->w->getTimeElapsed(1000 - 1));
-        $this->assertEquals(0, $this->w->getTimeElapsed(1000));
-        $this->assertEquals(1, $this->w->getTimeElapsed(1000 + 1));
-        $this->assertEquals(49, $this->w->getTimeElapsed(1000 + 49));
-        $this->assertEquals(50, $this->w->getTimeElapsed(1000 + 50));
-        $this->assertEquals(51, $this->w->getTimeElapsed(1000 + 51));
-        $this->assertEquals(100, $this->w->getTimeElapsed(1000 + 100));
-    }
+
 
     public function test_Get_Time_To_Next() {
         $this->assertEquals(150, $this->w->getTimeToNext(1000 - 100));
@@ -91,15 +82,6 @@ class TimeWindowTest extends \PHPUnit_Framework_TestCase {
 
     }
 
-
-    public function test_StartTime_TimeElapsed_Relation() {
-        $w = $this->w;
-        foreach ($this->timeStamps as $ts) {
-            $this->assertTrue(
-                    $w->getStartTime($ts) == $ts - $w->getTimeElapsed($ts)
-            );
-        }
-    }
 
 
     public function test_EndTime_TimeToNext_Relation() {
