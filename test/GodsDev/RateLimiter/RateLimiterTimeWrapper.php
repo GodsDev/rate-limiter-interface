@@ -34,11 +34,10 @@ class RateLimiterTimeWrapper {
     }
 
     public function reset($startTime = null) {
-        if ($startTime) {
-            $resetTime = $startTime;
-        } else {
-            $resetTime = $this->getTime();
+        if (is_null($startTime)) {
+            $startTime = $this->getTime();
         }
+        $resetTime = $startTime;
         $this->time = $resetTime;
         $this->startTime = $resetTime;
         $this->limiter->reset($resetTime);
