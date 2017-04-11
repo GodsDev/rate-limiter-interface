@@ -114,7 +114,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     public function reset($timestamp) {
         $startTime = $this->resetDataImpl($timestamp);
         if (is_null($startTime)) {
-            throw new \Exception("null startTime returned by resetDataImpl()");
+            throw new RateLimiterException("null startTime returned by resetDataImpl()");
         }
         $this->hits = 0;
         $this->timeToWait = 0;
