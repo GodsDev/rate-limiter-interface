@@ -14,6 +14,10 @@ class RateLimiterExampleTest extends AbstractRateLimiterInterfaceTest {
         return new \GodsDev\RateLimiter\RateLimiterExample($rate, $period);
     }
 
+    protected function getInitialTime() {
+        return 1000;
+    }
+
     protected function setUp() {
         parent::setUp();
     }

@@ -21,9 +21,13 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
      */
     abstract public function createRateLimiter($rate, $period);
 
+    protected function getInitialTime() {
+        return time();
+    }
+
     protected function setUp() {
         $limiter = $this->createRateLimiter(500, 100);
-        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, 1000);
+        $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, $this->getInitialTime());
     }
 
     /**
@@ -229,8 +233,10 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     public function test_StartTime_Is_Within_TimeWindow_Active_State() {
         $l = $this->getLimiterWrapper()->getLimiter();
 
-        $this->assertLessThanOrEqual(1000, $l->getStartTime(1000));
-        $this->assertGreaterThan(1000 - $l->getPeriod(), $l->getStartTime(1000));
+        $t = $this->getInitialTime();
+
+        $this->assertLessThanOrEqual($t, $l->getStartTime($t));
+        $this->assertGreaterThan($t - $l->getPeriod(), $l->getStartTime($t));
     }
 
 
