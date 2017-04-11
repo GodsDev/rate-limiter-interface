@@ -37,29 +37,28 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     //--------------------------------------------------------------------------
 
     /**
-     * sets actual values from implementation's data source (db, for example)
+     * sets actual $hits and $startTime values from implementation's data source (db, for example)
      *
      * @param integer $hits
      * @param integer $startTime
      *
-     * @returns boolean false if data source does not exists, true otherwise
      *
-     * Note: Do not implement a fail-safe logic if data is not found. Override the createDataImpl method instead.
+     * Implement a fail-safe logic if data is not found.
      *
      * @see createDataImpl
      */
     abstract protected function readDataImpl(&$hits, &$startTime);
 
-
-    /*
-     * This method is called when a limiter's data is not found
+    /**
+     * resets the limiter. Should set hits to 0.
+     *
+     * Implement a fail-safe logic if data is not found.
      *
      * @param integer $startTime
      *
-     * @see readDataImpl
-     * @see resetDataImpl
+     * @return integer trueStartTime can be aligned, for example
      */
-    abstract protected function createDataImpl($startTime);
+    abstract protected function resetDataImpl($startTime);
 
     /**
      * does the incremetation of hits
@@ -70,12 +69,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      */
     abstract protected function incrementHitImpl();
 
-    /**
-     * resets the limiter. Should set hits to 0.
-     *
-     * @param integer startTime
-     */
-    abstract protected function resetDataImpl($startTime);
 
     //--------------------------------------------------------------------------
 
@@ -100,7 +93,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
     public function getStartTime($timestamp) {
         $this->refreshState($timestamp);
-        return $this->getWindow()->getStartTime();
+        return $this->window->getStartTime();
     }
 
     public function inc($timestamp) {
@@ -112,46 +105,39 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         }
     }
 
-    public function reset($timestamp) {
-        $this->resetInner($timestamp);
-        $this->resetDataImpl($timestamp);
-    }
-
 
     /**
      *
-     * @return \GodsDev\RateLimiter\TimeWindow instance
+     * @param integer $timestamp
+     * @return integer startTime
      */
-    protected function getWindow() {
-        return $this->window;
+    public function reset($timestamp) {
+        $startTime = $this->resetDataImpl($timestamp);
+        $this->hits = 0;
+        $this->timeToWait = 0;
+
+        return $startTime;
     }
+
+
+    //------------------------------------
 
 
     private function refreshState($timestamp) {
-        $fetchSuccess = $this->readDataImpl($this->hits, $this->startTime);
-        if ($fetchSuccess == false) {
-            $this->resetInner($timestamp);
-            $this->createDataImpl($this->startTime);
-        }
-
-        if ($this->getWindow()->isActive($timestamp) == false) {
-            //a new, clean period
-            $this->reset($timestamp);
-        } else if ($this->hits < $this->rate) {
-            //within the period, and there are free hits
-            $this->timeToWait = 0;
-        } else {
-            //within the period, and there are no free hits to use
-            $this->timeToWait = $this->getWindow()->getTimeToNext($timestamp);
-        }
-    }
-
-
-    private function resetInner($timestamp) {
-        $this->window = new TimeWindow($timestamp, $this->period);
-        $this->timeToWait = 0;
+        $startTime = $timestamp;
         $this->hits = 0;
-    }
+        $this->timeToWait = 0;
+        $this->readDataImpl($this->hits, $startTime);
+        $this->window = new \GodsDev\RateLimiter\TimeWindow($startTime, $this->period);
 
+        if ($this->window->isActive($timestamp) == false) {
+            //a new, clean period
+            $startTime = $this->reset($timestamp);
+            $this->window = new \GodsDev\RateLimiter\TimeWindow($startTime, $this->period);
+        } else if ($this->hits >= $this->rate) {
+            //within the period, and there are no free hits to use
+            $this->timeToWait = $this->window->getTimeToNext($timestamp);
+        }
+    }
 
 }
