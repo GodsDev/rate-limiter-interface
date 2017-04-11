@@ -56,7 +56,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * @param integer $startTime
      *
-     * @return integer modified startTime. Can be aligned, for example to the current whole hour
+     * @return integer modified startTime. Can be aligned down, for example to the current whole hour
      */
     abstract protected function resetDataImpl($startTime);
 
