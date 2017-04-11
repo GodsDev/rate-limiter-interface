@@ -47,7 +47,7 @@ class TimeWindow {
      * @return integer a time stamp of immediately following next TimeWindow
      */
     public function getEndTime() {
-        return $this->startTime + $this->period;
+        return $this->getStartTime() + $this->getPeriod();
     }
 
     /**
@@ -67,7 +67,7 @@ class TimeWindow {
      * @return boolean true if, false otherwise
      */
     public function isFuture($timeStamp) {
-        return ($timeStamp < $this->startTime);
+        return ($timeStamp < $this->getStartTime());
     }
 
     /**
@@ -79,19 +79,6 @@ class TimeWindow {
      */
     public function isActive($timeStamp) {
         return (!$this->isElapsed($timeStamp) && (!$this->isFuture($timeStamp)));
-    }
-
-    /**
-     * Elapsed time since startTime, based on timestamp
-     *
-     * @param integer $timestamp a reference time stamp (in time-units)
-     * @return integer >= 0 for active or elapsed window. < 0 for future window.
-     *
-     * This expression is true for a window $w and timestamp $ts:
-     *   $w->getStartTime($ts) == $ts - $w->getTimeElapsed($ts)
-     */
-    public function getTimeElapsed($timestamp) {
-        return ($timestamp - $this->startTime);
     }
 
 
