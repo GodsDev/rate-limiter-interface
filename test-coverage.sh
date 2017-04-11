@@ -1,1 +1,1 @@
-./vendor/bin/phpunit --testdox-text temp/testDox/concept.txt --coverage-html temp/coverage/concept test/GodsDev/RateLimiter/
+./vendor/bin/phpunit --testdox-text temp/testDox/RateLimiterExample.txt --coverage-html temp/coverage/RateLimiterExample test/GodsDev/RateLimiter/
