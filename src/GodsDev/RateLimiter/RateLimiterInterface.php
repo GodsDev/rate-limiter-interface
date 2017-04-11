@@ -38,7 +38,7 @@ interface RateLimiterInterface {
     /**
      * does a request
      *
-     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
      * @return boolean false if number of requests per period is too high (i.e. exceeds the getRate() value)
      */
@@ -46,7 +46,7 @@ interface RateLimiterInterface {
 
 
     /**
-     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
      * @return integer number of successful requests made within a period.
      */
@@ -55,7 +55,7 @@ interface RateLimiterInterface {
 
     /**
      *
-     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
      * @return integer time to wait (in time-units) before a next successful request can be made.
      */
@@ -70,7 +70,7 @@ interface RateLimiterInterface {
      * <li> a call of getTimeToWait() should return 0
      * </ul>
      *
-     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      */
     public function reset($timestamp);
 
