@@ -56,7 +56,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * @param integer $startTime
      *
-     * @return integer trueStartTime can be aligned, for example
+     * @return integer modified startTime. Can be aligned, for example to the current whole hour
      */
     abstract protected function resetDataImpl($startTime);
 
@@ -113,6 +113,9 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      */
     public function reset($timestamp) {
         $startTime = $this->resetDataImpl($timestamp);
+        if (is_null($startTime)) {
+            throw new \Exception("null startTime returned by resetDataImpl()");
+        }
         $this->hits = 0;
         $this->timeToWait = 0;
 
