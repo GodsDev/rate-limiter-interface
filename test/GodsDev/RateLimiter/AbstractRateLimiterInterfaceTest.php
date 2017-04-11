@@ -103,7 +103,7 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     public function test_Zero_Hits_Zero_TimeToWait_After_Reset() {
         $w = $this->getLimiterWrapper();
 
-        $w->reset();
+        $w->resetLimiter();
         $this->test_Zero_Hits_Zero_TimeToWait();
     }
 
@@ -132,7 +132,7 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $w = $this->getLimiterWrapper();
 
         $this->test_Inc_Increments_Hits_By_One();
-        $w->reset();
+        $w->resetLimiter();
         $this->test_Zero_Hits_Zero_TimeToWait();
         $this->test_Inc_Increments_Hits_By_One();
     }
@@ -227,35 +227,19 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
 
 
     public function test_StartTime_Is_Within_TimeWindow_Active_State() {
-        $w = $this->getLimiterWrapper();
-        $period = $w->getLimiter()->getPeriod();
+        $l = $this->getLimiterWrapper()->getLimiter();
 
-        $this->assertLessThanOrEqual($w->getTime(), $w->getLimiter()->getStartTime($w->getTime()));
-        $this->assertGreaterThan($w->getTime() - $period, $w->getLimiter()->getStartTime($w->getTime()));
+        $this->assertLessThanOrEqual(1000, $l->getStartTime(1000));
+        $this->assertGreaterThan(1000 - $l->getPeriod(), $l->getStartTime(1000));
     }
 
 
-    public function test_Reset_In_New_Time_Stays_Active() {
-        $w = $this->getLimiterWrapper();
-        //current
-        $w->getLimiter()->reset(1050);
-        echo("\nlimiter:{$w->getLimiter()->getStartTime(1050)}, wrapper: {$w->getStartTime()}");
-        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
-        //future
-        $w->getLimiter()->reset(1200);
-        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
-        //past
-        $w->getLimiter()->reset(999);
-        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
-
-
-    }
 //------------------------------------------------------------------------------
 
 
 
 
-    public function testTheLimiterFlow() {
+    public function test_Limiter_Flow() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
         $period = $w->getLimiter()->getPeriod();
