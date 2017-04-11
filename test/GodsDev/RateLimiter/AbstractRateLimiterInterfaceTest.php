@@ -234,6 +234,22 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertGreaterThan($w->getTime() - $period, $w->getLimiter()->getStartTime($w->getTime()));
     }
 
+
+    public function test_Reset_In_New_Time_Stays_Active() {
+        $w = $this->getLimiterWrapper();
+        //current
+        $w->getLimiter()->reset(1050);
+        echo("\nlimiter:{$w->getLimiter()->getStartTime(1050)}, wrapper: {$w->getStartTime()}");
+        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
+        //future
+        $w->getLimiter()->reset(1200);
+        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
+        //past
+        $w->getLimiter()->reset(999);
+        $this->test_StartTime_Is_Within_TimeWindow_Active_State();
+
+
+    }
 //------------------------------------------------------------------------------
 
 
