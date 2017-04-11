@@ -43,6 +43,10 @@ class RateLimiterTimeWrapper {
         $this->limiter->reset($resetTime);
     }
 
+    /**
+     *
+     * @return \GodsDev\RateLimiter\RateLimiterInterface
+     */
     public function getLimiter() {
         return $this->limiter;
     }
