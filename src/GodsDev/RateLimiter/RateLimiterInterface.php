@@ -4,7 +4,7 @@
 namespace GodsDev\RateLimiter;
 
 /**
- * Limits the number of requests per time.
+ * Limits the number of hits per time.
  * There are two parameters: rate and period.
  * A request is a call of the inc() method. An inc() method begins to return false if number of requests per period is higher than a rate
  *
@@ -36,13 +36,14 @@ interface RateLimiterInterface {
     public function getRate();
 
     /**
-     * does a request
+     * tries to consume a hit (or hits)
      *
      * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
+     * @param integer $increment
      *
-     * @return boolean false if number of requests per period is too high (i.e. exceeds the getRate() value)
+     * @return integer number of hits consumed out of $increment. 0 if number of hits consumed per period is too high (i.e. exceeds the getRate() value)
      */
-    public function inc($timestamp);
+    public function inc($timestamp, $increment = 1);
 
 
     /**

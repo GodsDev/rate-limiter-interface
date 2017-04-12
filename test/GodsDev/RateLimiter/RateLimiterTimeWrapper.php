@@ -46,7 +46,7 @@ class RateLimiterTimeWrapper {
     }
 
     public function inc() {
-        return $this->limiter->inc($this->getTime());
+        return ($this->limiter->inc($this->getTime()) > 0);
     }
 
     public function getHits() {

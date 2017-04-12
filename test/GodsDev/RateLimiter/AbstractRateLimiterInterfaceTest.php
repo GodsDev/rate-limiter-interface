@@ -240,6 +240,65 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     }
 
 
+    protected function consume_More_Hits_At_Once($hitsToBeConsumed) {
+        $l = $this->getLimiterWrapper()->getLimiter();
+        $t = $this->getLimiterWrapper()->getTime();
+
+        $hitsReallyConsumed = $l->inc($t, $hitsToBeConsumed);
+        $this->assertLessThanOrEqual($hitsToBeConsumed, $hitsReallyConsumed);
+        return $hitsReallyConsumed;
+    }
+
+    public function test_Consume_More_Hits_At_Once() {
+        $l = $this->getLimiterWrapper()->getLimiter();
+        $t = $this->getLimiterWrapper()->getTime();
+
+        $this->assertEquals(2, $this->consume_More_Hits_At_Once(2));
+        $this->assertEquals(2, $l->getHits($t));
+        $this->assertEquals(0, $l->getTimeToWait($t));
+
+        $this->assertEquals(3, $this->consume_More_Hits_At_Once(3));
+        $this->assertEquals(5, $l->getHits($t));
+        $this->assertEquals(0, $l->getTimeToWait($t));
+    }
+
+    public function test_Consume_All_Hits_At_Once() {
+        $l = $this->getLimiterWrapper()->getLimiter();
+        $t = $this->getLimiterWrapper()->getTime();
+        $fullHitCount = $l->getRate();
+
+        $this->assertEquals($fullHitCount, $this->consume_More_Hits_At_Once($fullHitCount));
+        $this->assertEquals($fullHitCount, $l->getHits($t));
+        $this->assertEquals($l->getPeriod(), $l->getTimeToWait($t));
+    }
+
+    public function test_Consume_Only_Some_Hits_If_Not_Sufficient_Capacity_On_Empty_Limiter() {
+        $l = $this->getLimiterWrapper()->getLimiter();
+        $t = $this->getLimiterWrapper()->getTime();
+
+        $this->assertEquals($l->getRate(), $this->consume_More_Hits_At_Once($l->getRate() + 1));
+        $this->assertEquals($l->getRate(), $l->getHits($t));
+        $this->assertEquals($l->getPeriod(), $l->getTimeToWait($t));
+    }
+
+    public function test_Consume_Only_Some_Hits_If_Not_Sufficient_Capacity() {
+        $l = $this->getLimiterWrapper()->getLimiter();
+        $t = $this->getLimiterWrapper()->getTime();
+
+        $this->assertEquals(2, $this->consume_More_Hits_At_Once(2));
+        $this->assertEquals(2, $l->getHits($t));
+        $this->assertEquals(0, $l->getTimeToWait($t));
+
+        $nextHitCount = 2 + $l->getRate();
+
+        $this->assertEquals($l->getRate() - 2, $this->consume_More_Hits_At_Once($nextHitCount));
+        $this->assertEquals($l->getRate(), $l->getHits($t));
+        $this->assertEquals($l->getPeriod(), $l->getTimeToWait($t));
+    }
+
+
+
+
 //------------------------------------------------------------------------------
 
 

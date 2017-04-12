@@ -67,10 +67,11 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * @param integer $lastKnownHitCount number of hits retrieved by a readDataImpl method
      * @param integer $lastKnownStartTime start time retrieved by a readDataImpl method
+     * @param integer $increment number of hits consumed out of $increment. 0 if number of hits consumed per period is too high (i.e. exceeds the getRate() value)
      *
      * @return boolean true if the incrementation was successful, false otherwise
      */
-    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime);
+    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $increment);
 
 
     //--------------------------------------------------------------------------
@@ -99,12 +100,12 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         return $this->window->getStartTime();
     }
 
-    public function inc($timestamp) {
+    public function inc($timestamp, $increment = 1) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
-            return $this->incrementHitImpl($this->hits, $this->window->getStartTime());
+            return $this->incrementHitImpl($this->hits, $this->window->getStartTime(), $increment);
         } else {
-            return false;
+            return 0;
         }
     }
 
