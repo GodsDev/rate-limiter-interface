@@ -26,7 +26,7 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     }
 
     protected function setUp() {
-        $limiter = $this->createRateLimiter(500, 100);
+        $limiter = $this->createRateLimiter(30, 10);
         $this->timeWrapper = new \GodsDev\RateLimiter\RateLimiterTimeWrapper($limiter, $this->getInitialTime());
     }
 
