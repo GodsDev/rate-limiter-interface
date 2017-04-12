@@ -4,16 +4,29 @@
 namespace GodsDev\RateLimiter;
 
 /**
- * Limits the number of requests per time.
- * There are two parameters: period and rate.
+ * Limits the number of hits per time.
+ * There are two parameters: rate and period.
  * A request is a call of the inc() method. An inc() method begins to return false if number of requests per period is higher than a rate
  *
+ * rate
+ * period
+ * window
+ *   elapsed
+ *   active
+ *   future
+ *
+ *   fresh
+ *   exhausted
+ * hit
+ * startTime
+ * timeToWait
+ * reset
  *
  */
 interface RateLimiterInterface {
 
     /**
-     * @return integer number of seconds in a period
+     * @return integer number of time-units in a period
      */
     public function getPeriod();
 
@@ -23,30 +36,31 @@ interface RateLimiterInterface {
     public function getRate();
 
     /**
-     * does a request
+     * tries to consume a hit (or hits)
      *
-     * @param integer|null $timestamp an user-defined time of a method call. Unix-like time stamp (in seconds). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
+     * @param integer $increment
      *
-     * @return boolean false if number of requests per period is too high (i.e. exceeds the getRate() value)
+     * @return integer number of hits consumed out of $increment. 0 if number of hits consumed per period is too high (i.e. exceeds the getRate() value)
      */
-    public function inc($timestamp = null);
+    public function inc($timestamp, $increment = 1);
 
 
     /**
-     * @param integer|null $timestamp an user-defined time of a method call. Unix-like time stamp (in seconds). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
      * @return integer number of successful requests made within a period.
      */
-    public function getHits($timestamp = null);
+    public function getHits($timestamp);
 
 
     /**
      *
-     * @param integer|null $timestamp an user-defined time of a method call. Unix-like time stamp (in seconds). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
-     * @return integer time to wait (in seconds) before a next successful request can be made.
+     * @return integer time to wait (in time-units) before a next successful request can be made.
      */
-    public function getTimeToWait($timestamp = null);
+    public function getTimeToWait($timestamp);
 
     /**
      * Reset the limiter, so we can call inc() method rate-times with the true result.
@@ -57,9 +71,14 @@ interface RateLimiterInterface {
      * <li> a call of getTimeToWait() should return 0
      * </ul>
      *
-     * @param integer|null an user-defined time of a method call. Unix-like time stamp (in seconds). Mainly for testing purpose.
+     * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      */
-    public function reset($timestamp = null);
+    public function reset($timestamp);
 
+    /**
+     *
+     * @param type $timestamp  an user-defined time of a method call. Unix-like time stamp (in time-units).
+     */
+    public function getStartTime($timestamp);
 }
 
