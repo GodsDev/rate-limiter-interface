@@ -27,7 +27,7 @@ namespace GodsDev\RateLimiter;
  * <ul>
  *   <li> A "Next TimeWindow" to TimeWindow2 is TimeWindow3
  *   <li> A startTime of TimeWindow2 has a value of startTime2, the same as the value of endTime1
- *   <li> TimeWindow1 endtime can be computed, has value of startTime1 + period
+ *   <li> TimeWindow1 endtime can be computed, has a value of startTime1 + period
  * </ul>
  * 
  * for a timestamp given in a fig1:
