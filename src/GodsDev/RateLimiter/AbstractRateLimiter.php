@@ -6,6 +6,8 @@
  * and open the template in the editor.
  */
 
+// TODO catch possible exceptions from impl methods and rethrow them in the wrapped RateLimiterException
+
 namespace GodsDev\RateLimiter;
 
 /**
@@ -39,8 +41,8 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     /**
      * sets actual $hits and $startTime values from implementation's data source (db, for example)
      *
-     * @param integer $hits
-     * @param integer $startTime
+     * @param integer $hits a variable where to store the number of hits read from implementation's data source
+     * @param integer $startTime a variable where to store the start time read from implementation's data source
      *
      *
      * Implement a fail-safe logic if data is not found.
