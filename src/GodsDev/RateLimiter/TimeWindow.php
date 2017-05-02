@@ -67,7 +67,6 @@ class TimeWindow {
     /**
      * @return int a period of this TimeWindow
      */
-     */
     public function getPeriod() {
         return $this->period;
     }
