@@ -32,9 +32,9 @@ class RateLimiterExample extends \GodsDev\RateLimiter\AbstractRateLimiter {
         }
     }
 
-    protected function incrementHitImpl() {
-        $this->cHits++;
-        return true;
+    protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $sanitizedIncrement) {
+        $this->cHits = $lastKnownHitCount + $sanitizedIncrement;
+        return $sanitizedIncrement;
     }
 
 
