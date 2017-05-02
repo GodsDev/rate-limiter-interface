@@ -67,13 +67,13 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * Abstract limiter assures that a call of readDataImpl was called before this method
      *
-     * @param integer $lastKnownHitCount number of hits retrieved by a readDataImpl method
-     * @param integer $lastKnownStartTime start time retrieved by a readDataImpl method
-     * @param integer $increment number of hits consumed out of $increment. 0 if number of hits consumed per period is too high (i.e. exceeds the getRate() value)
+     * @param int $lastKnownHitCount number of hits retrieved by a readDataImpl method
+     * @param int $lastKnownStartTime start time retrieved by a readDataImpl method
+     * @param int $sanitizedIncrement number of hits to be consumed. It is safe: $lastKnownHitCount + $sanitizedIncrement <= rate
      *
-     * @return boolean true if the incrementation was successful, false otherwise
+     * @return int number of hits consumed. Always to be less or equal than $sanitizedIncrement
      */
-    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $increment);
+    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $sanitizedIncrement);
 
 
     //--------------------------------------------------------------------------
@@ -105,7 +105,13 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     public function inc($timestamp, $increment = 1) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
-            return $this->incrementHitImpl($this->hits, $this->window->getStartTime(), $increment);
+            //increment value guard
+            if ($this->hits + $increment > $this->rate) {
+                $sanitizedIncrement = $this->rate - $this->hits;
+            } else {
+                $sanitizedIncrement = $increment;
+            }
+            return $this->incrementHitImpl($this->hits, $this->window->getStartTime(), $sanitizedIncrement);
         } else {
             return 0;
         }
