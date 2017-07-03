@@ -1,6 +1,5 @@
 <?php
 
-
 namespace GodsDev\RateLimiter;
 
 /**
@@ -45,14 +44,12 @@ interface RateLimiterInterface {
      */
     public function inc($timestamp, $increment = 1);
 
-
     /**
      * @param integer $timestamp an user-defined time of a method call. Unix-like time stamp (in time-units).
      *
      * @return integer number of successful requests made within a period.
      */
     public function getHits($timestamp);
-
 
     /**
      *
@@ -81,4 +78,3 @@ interface RateLimiterInterface {
      */
     public function getStartTime($timestamp);
 }
-

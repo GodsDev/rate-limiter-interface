@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 // TODO catch possible exceptions from impl methods and rethrow them in the wrapped RateLimiterException
 
 namespace GodsDev\RateLimiter;
@@ -13,23 +7,47 @@ namespace GodsDev\RateLimiter;
 /**
  * Description of RateLimiterAdapter
  *
- * @author Tomáš
+ * @author Tomáš Kraus
  */
 abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterInterface {
 
+    /**
+     * Initiated in __construct
+     * @var int
+     */
     private $rate;
+
+    /**
+     * Initiated in __construct
+     * MAY be in seconds or any other time unit
+     * 
+     * @var int
+     */
     private $period;
 
+    /**
+     *
+     * @var \GodsDev\RateLimiter\TimeWindow
+     */
     private $window;
 
+    /**
+     *
+     * @var int
+     */
     private $timeToWait;
+
+    /**
+     *
+     * @var int
+     */
     private $hits;
 
     /**
      * new instance
      *
-     * @param type $rate
-     * @param type $period
+     * @param int $rate
+     * @param type $period MAY be denominated in seconds or any other time unit
      */
     public function __construct($rate, $period) {
         $this->rate = $rate;
@@ -75,7 +93,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      */
     abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $sanitizedIncrement);
 
-
     //--------------------------------------------------------------------------
 
 
@@ -117,7 +134,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         }
     }
 
-
     /**
      *
      * @param integer $timestamp
@@ -133,7 +149,6 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
 
         return $startTime;
     }
-
 
     //------------------------------------
 

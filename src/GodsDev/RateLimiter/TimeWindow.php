@@ -37,14 +37,13 @@ namespace GodsDev\RateLimiter;
  *    <li> "FUTURE Timewindow" is TimeWindow3 and all TimeWindows after
  * </ul>
  *
- * @author Tomáš
+ * @author Tomáš Kraus
  */
-class TimeWindow {
 
+class TimeWindow {
 
     private $startTime;
     private $period;
-
 
     /**
      * creates a new instance
@@ -109,7 +108,6 @@ class TimeWindow {
         return (!$this->isElapsed($timestamp) && (!$this->isFuture($timestamp)));
     }
 
-
     /**
      * Time to wait until the next window is active, against the $timestamp given.
      *
@@ -122,4 +120,5 @@ class TimeWindow {
     public function getTimeToNext($timestamp) {
         return ($this->getEndTime() - $timestamp);
     }
+
 }

@@ -5,7 +5,7 @@ namespace GodsDev\RateLimiter;
 /**
  * Description of RateLimiterMysqlTest
  *
- * @author Tomáš
+ * @author Tomáš Kraus
  */
 class RateLimiterExampleWrongCaseTest extends \PHPUnit_Framework_TestCase {
 
@@ -20,4 +20,5 @@ class RateLimiterExampleWrongCaseTest extends \PHPUnit_Framework_TestCase {
 
         $this->limiter->reset(10);
     }
+
 }
