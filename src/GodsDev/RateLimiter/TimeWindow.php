@@ -42,7 +42,16 @@ namespace GodsDev\RateLimiter;
 
 class TimeWindow {
 
+    /**
+     *
+     * @var int
+     */
     private $startTime;
+    
+    /**
+     *
+     * @var int
+     */
     private $period;
 
     /**
@@ -110,6 +119,7 @@ class TimeWindow {
 
     /**
      * Time to wait until the next window is active, against the $timestamp given.
+     * While waiting no more hits are allowed as the quota was depleted.
      *
      * @param int $timestamp a reference time stamp
      * @return int >= 0 for active or future window. < 0 for elapsed window.
