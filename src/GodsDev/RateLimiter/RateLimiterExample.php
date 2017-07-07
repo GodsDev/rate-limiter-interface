@@ -12,17 +12,32 @@ class RateLimiterExample extends \GodsDev\RateLimiter\AbstractRateLimiter {
     private $cStartTime;
     private $isWrong;
 
-
+    /**
+     * 
+     * @param int $rate
+     * @param int $period
+     * @param bool $isWrongFlag
+     */
     public function __construct($rate, $period, $isWrongFlag = false) {
         parent::__construct($rate, $period);
         $this->isWrong = $isWrongFlag;
     }
 
+    /**
+     * 
+     * @param int $hits
+     * @param int $startTime
+     */
     protected function readDataImpl(&$hits, &$startTime) {
-            $hits = $this->cHits;
-            $startTime = $this->cStartTime;
+        $hits = $this->cHits;
+        $startTime = $this->cStartTime;
     }
 
+    /**
+     * 
+     * @param int $startTime
+     * @return int
+     */
     protected function resetDataImpl($startTime) {
         $this->cStartTime = $startTime;
         $this->cHits = 0;
@@ -32,10 +47,16 @@ class RateLimiterExample extends \GodsDev\RateLimiter\AbstractRateLimiter {
         }
     }
 
-    protected function incrementHitImpl() {
-        $this->cHits++;
-        return true;
+    /**
+     * 
+     * @param int $lastKnownHitCount
+     * @param int $lastKnownStartTime
+     * @param int $sanitizedIncrement
+     * @return int
+     */
+    protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $sanitizedIncrement) {
+        $this->cHits = $lastKnownHitCount + $sanitizedIncrement;
+        return $sanitizedIncrement;
     }
-
 
 }

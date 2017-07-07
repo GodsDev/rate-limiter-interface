@@ -2,7 +2,6 @@
 
 namespace GodsDev\RateLimiter;
 
-
 /**
  * Provides a base test class for ensuring compliance with the RateLimiterInterface.
  *
@@ -12,8 +11,8 @@ namespace GodsDev\RateLimiter;
  * override the setUp() method, call a parent->setUp() in it.
  *
  */
-abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase
-{
+abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestCase {
+
     private $timeWrapper;
 
     /**
@@ -21,6 +20,10 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
      */
     abstract public function createRateLimiter($rate, $period);
 
+    /**
+     * 
+     * @return int seconds since the Unix Epoch (January 1 1970 00:00:00 GMT)
+     */
     protected function getInitialTime() {
         return time();
     }
@@ -37,8 +40,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
     protected function getLimiterWrapper() {
         return $this->timeWrapper;
     }
-
-
 
     //-AUXILIARY-------------------------------------------------------------------------
 
@@ -74,7 +75,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         return $successCallCount;
     }
 
-
     protected function ensureMaximumHitsIsMade() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
@@ -89,7 +89,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertGreaterThanOrEqual(1, $w->getLimiter()->getRate(), 'less than a minimal rate value is provided');
         $this->assertGreaterThanOrEqual(1, $w->getLimiter()->getPeriod(), 'less than a minimal period value is provided');
     }
-
 
     public function test_Implements_RateLimiterInterface() {
         $this->assertInstanceOf('GodsDev\RateLimiter\RateLimiterInterface', $this->getLimiterWrapper()->getLimiter());
@@ -169,7 +168,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertLessThanOrEqual($halfPeriod, $w->getTimeToWait(), 'has to wait for less than a half of the period within an exhausted period');
     }
 
-
     public function test_TimeToWait_Almost_A_Period_If_Burst() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
@@ -192,7 +190,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals($rate, $successCalls, 'allowed <rate> successful requests within one period');
     }
 
-
     public function test_Ready_In_The_Next_Period() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
@@ -213,7 +210,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals($rate, $successCallsInNextPeriod, 'allowed <rate> successful requests within the next period');
     }
 
-
     public function test_No_Hits_No_TimeToWait_If_Timestamp_Before_StartTime() {
         $w = $this->getLimiterWrapper();
         $rate = $w->getLimiter()->getRate();
@@ -229,7 +225,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals(0, $w->getLimiter()->getTimeToWait($timeBefore), "if timestamp before start time, reset the limiter to have 0 timeToWait");
     }
 
-
     public function test_StartTime_Is_Within_TimeWindow_Active_State() {
         $l = $this->getLimiterWrapper()->getLimiter();
 
@@ -238,7 +233,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertLessThanOrEqual($t, $l->getStartTime($t));
         $this->assertGreaterThan($t - $l->getPeriod(), $l->getStartTime($t));
     }
-
 
     protected function consume_More_Hits_At_Once($hitsToBeConsumed) {
         $l = $this->getLimiterWrapper()->getLimiter();
@@ -295,9 +289,6 @@ abstract class AbstractRateLimiterInterfaceTest extends \PHPUnit_Framework_TestC
         $this->assertEquals($l->getRate(), $l->getHits($t));
         $this->assertEquals($l->getPeriod(), $l->getTimeToWait($t));
     }
-
-
-
 
 //------------------------------------------------------------------------------
 

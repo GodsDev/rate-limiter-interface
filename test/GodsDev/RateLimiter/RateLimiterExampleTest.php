@@ -2,11 +2,10 @@
 
 namespace GodsDev\RateLimiter;
 
-
 /**
  * Description of RateLimiterMysqlTest
  *
- * @author Tomáš
+ * @author Tomáš Kraus
  */
 class RateLimiterExampleTest extends AbstractRateLimiterInterfaceTest {
 

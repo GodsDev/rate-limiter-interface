@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit 
+    colors="true"
+    stderr="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    stopOnFailure="false">
+    <testsuites> 
+        <testsuite name="Application Test Suite"> 
+            <directory>./test/</directory> 
+        </testsuite> 
+    </testsuites> 
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">./src/</directory>
+            <file>./test/GodsDev/RateLimiter/RateLimiterTimeWrapper.php</file>
+        </whitelist>
+    </filter>    
+</phpunit>

@@ -1,33 +1,56 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// TODO catch possible exceptions from impl methods and rethrow them in the wrapped RateLimiterException
 
 namespace GodsDev\RateLimiter;
 
 /**
  * Description of RateLimiterAdapter
  *
- * @author Tomáš
+ * @author Tomáš Kraus
  */
 abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterInterface {
 
+    /**
+     * Initiated in __construct
+     * @var int
+     */
     private $rate;
+
+    /**
+     * Initiated in __construct
+     * MAY be in seconds or any other time unit
+     * 
+     * @var int
+     */
     private $period;
 
+    /**
+     *
+     * @var \GodsDev\RateLimiter\TimeWindow
+     */
     private $window;
 
+    /**
+     * Time to wait until the next window is active, against the $timestamp given.
+     * Calculated by \GodsDev\RateLimiter\TimeWindow\getTimeToNext($timestamp)
+     * While waiting no more hits are allowed as the quota was depleted.
+     * 
+     * @var int
+     */
     private $timeToWait;
+
+    /**
+     *
+     * @var int
+     */
     private $hits;
 
     /**
      * new instance
      *
-     * @param type $rate
-     * @param type $period
+     * @param int $rate
+     * @param int $period MAY be denominated in seconds or any other time unit
      */
     public function __construct($rate, $period) {
         $this->rate = $rate;
@@ -39,8 +62,8 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
     /**
      * sets actual $hits and $startTime values from implementation's data source (db, for example)
      *
-     * @param integer $hits
-     * @param integer $startTime
+     * @param integer $hits a variable where to store the number of hits read from implementation's data source
+     * @param integer $startTime a variable where to store the start time read from implementation's data source
      *
      *
      * Implement a fail-safe logic if data is not found.
@@ -65,50 +88,97 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
      *
      * Abstract limiter assures that a call of readDataImpl was called before this method
      *
-     * @param integer $lastKnownHitCount number of hits retrieved by a readDataImpl method
-     * @param integer $lastKnownStartTime start time retrieved by a readDataImpl method
-     * @param integer $increment number of hits consumed out of $increment. 0 if number of hits consumed per period is too high (i.e. exceeds the getRate() value)
+     * @param int $lastKnownHitCount number of hits retrieved by a readDataImpl method
+     * @param int $lastKnownStartTime start time retrieved by a readDataImpl method
+     * @param int $sanitizedIncrement number of hits to be consumed. It is safe: $lastKnownHitCount + $sanitizedIncrement <= rate
      *
-     * @return boolean true if the incrementation was successful, false otherwise
+     * @return int number of hits consumed. Always to be less or equal than $sanitizedIncrement
      */
-    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $increment);
-
+    abstract protected function incrementHitImpl($lastKnownHitCount, $lastKnownStartTime, $sanitizedIncrement);
 
     //--------------------------------------------------------------------------
 
-
+    
+    /**
+     * Period getter
+     * 
+     * @return int
+     */
     public function getPeriod() {
         return $this->period;
     }
 
+    /**
+     * Rate getter
+     * 
+     * @return int
+     */
     public function getRate() {
         return $this->rate;
     }
 
+    /**
+     * Return number of consumed hits during the period e.g. for quota notification calculation
+     * 
+     * @param int $timestamp
+     * @return int
+     */
     public function getHits($timestamp) {
         $this->refreshState($timestamp);
         return $this->hits;
     }
 
+    /**
+     * Returns number of time units (seconds) remaining for a next hit allowed
+     * 
+     * @param int $timestamp
+     * @return int
+     */
     public function getTimeToWait($timestamp) {
         $this->refreshState($timestamp);
         return $this->timeToWait;
     }
 
+    /**
+     * 
+     * @param int $timestamp
+     * @return type
+     */
     public function getStartTime($timestamp) {
         $this->refreshState($timestamp);
         return $this->window->getStartTime();
     }
 
+    /**
+     * Increments usage in time and returns number of hits allowed (compared to increment)
+     * 
+     * @param int $timestamp
+     * @param int $increment [optional]
+     * @return int
+     */
     public function inc($timestamp, $increment = 1) {
         $this->refreshState($timestamp);
         if ($this->timeToWait == 0 && $this->hits < $this->rate) {
-            return $this->incrementHitImpl($this->hits, $this->window->getStartTime(), $increment);
+            
+            if ($this->hits + $increment > $this->rate) {
+                $sanitizedIncrement = $this->rate - $this->hits;
+            } else {
+                $sanitizedIncrement = $increment;
+            }
+            return $this->incrementHitImpl($this->hits, $this->window->getStartTime(), $sanitizedIncrement);
         } else {
             return 0;
         }
+        /* can be shortened as:
+        return ($this->timeToWait == 0 && $this->hits < $this->rate)?(
+                //increment value guard as not all the quota was depleted yet
+                $this->incrementHitImpl($this->hits, $this->window->getStartTime(),
+                        //sanitizedIncrement
+                        ($this->hits + $increment > $this->rate)?($this->rate - $this->hits):$increment
+                        )
+                ):0;
+        */
     }
-
 
     /**
      *
@@ -126,10 +196,14 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
         return $startTime;
     }
 
-
     //------------------------------------
 
 
+    /**
+     * Refresh hits and timeToWait
+     * 
+     * @param int $timestamp
+     */
     private function refreshState($timestamp) {
         $startTime = $timestamp;
         $this->hits = 0;
@@ -142,7 +216,7 @@ abstract class AbstractRateLimiter implements \GodsDev\RateLimiter\RateLimiterIn
             $startTime = $this->reset($timestamp);
             $this->window = new \GodsDev\RateLimiter\TimeWindow($startTime, $this->period);
         } else if ($this->hits >= $this->rate) {
-            //within the period, and there are no free hits to use
+            //within the period, and there are no remaining hits to use
             $this->timeToWait = $this->window->getTimeToNext($timestamp);
         }
     }

@@ -1,3 +1,9 @@
-/vendor
-temp
+# IDE
 /nbproject
+
+# Composer infrastructure
+/vendor/
+/composer.lock
+
+# Code coverage
+temp

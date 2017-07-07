@@ -8,6 +8,7 @@ namespace GodsDev\RateLimiter;
  * Allows an injection of synthetic time instead a real one, to cover edge cases and speed up time-dependent tests.
  */
 class RateLimiterTimeWrapper {
+
     private $limiter;
     private $time;
     private $startTime;
@@ -26,7 +27,7 @@ class RateLimiterTimeWrapper {
     }
 
     public function getTime() {
-            return $this->time;
+        return $this->time;
     }
 
     public function getStartTime() {
